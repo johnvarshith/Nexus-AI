@@ -1,0 +1,62 @@
+from pydantic_settings import BaseSettings
+from typing import List, Optional
+import os
+
+class Settings(BaseSettings):
+    """Application settings"""
+    
+    # App
+    APP_NAME: str = "NexusAI"
+    DEBUG: bool = True
+    ENV: str = "development"
+    
+    # Ollama
+    OLLAMA_BASE_URL: str = "http://localhost:11434"
+    OLLAMA_MAIN_MODEL: str = "qwen2.5:14b"
+    OLLAMA_CODER_MODEL: str = "qwen2.5-coder:7b"
+    OLLAMA_EMBED_MODEL: str = "nomic-embed-text"
+    
+    # Database
+    DATABASE_URL: str = "postgresql://nexusai:password@localhost:5432/nexusai_db"
+    POSTGRES_USER: str = "nexusai"
+    POSTGRES_PASSWORD: str = "password"
+    POSTGRES_DB: str = "nexusai_db"
+    POSTGRES_HOST: str = "localhost"
+    POSTGRES_PORT: int = 5432
+    
+    # MLflow
+    MLFLOW_TRACKING_URI: str = "http://localhost:5000"
+    MLFLOW_EXPERIMENT_NAME: str = "nexusai-agents"
+    
+    # Arize Phoenix
+    PHOENIX_PORT: int = 6006
+    PHOENIX_HOST: str = "localhost"
+    
+    # MCP
+    MCP_SERVER_HOST: str = "localhost"
+    MCP_SERVER_PORT: int = 8080
+    
+    # API
+    API_HOST: str = "0.0.0.0"
+    API_PORT: int = 8000
+    
+    # CORS
+    CORS_ORIGINS: str = "http://localhost:3000,http://localhost:5173"
+    
+    # External APIs
+    TAVILY_API_KEY: Optional[str] = None
+    OPENAI_API_KEY: Optional[str] = None
+    
+    # Vector DB
+    EMBEDDING_DIMENSION: int = 768  # nomic-embed-text dimension
+    
+    class Config:
+        env_file = ".env"
+        case_sensitive = False
+
+# Create global settings instance
+settings = Settings()
+
+def get_settings() -> Settings:
+    """Get settings instance"""
+    return settings

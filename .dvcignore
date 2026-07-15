@@ -1,0 +1,4 @@
+# Windows command to create .dvcignore
+echo "*.pyc" > .dvcignore
+echo "__pycache__/" >> .dvcignore
+echo "*.log" >> .dvcignore
