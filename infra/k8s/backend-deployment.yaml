@@ -1,0 +1,42 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: nexusai-backend
+  labels:
+    app: nexusai-backend
+spec:
+  replicas: 3
+  selector:
+    matchLabels:
+      app: nexusai-backend
+  template:
+    metadata:
+      labels:
+        app: nexusai-backend
+    spec:
+      containers:
+      - name: backend
+        image: nexusai/backend:latest
+        ports:
+        - containerPort: 8000
+        env:
+        - name: OLLAMA_BASE_URL
+          value: "http://ollama-service.ollama.svc.cluster.local:11434"
+        - name: DATABASE_URL
+          valueFrom:
+            secretKeyRef:
+              name: postgres-secret
+              key: url
+        resources:
+          requests:
+            memory: "512Mi"
+            cpu: "250m"
+          limits:
+            memory: "1Gi"
+            cpu: "500m"
+        livenessProbe:
+          httpGet:
+            path: /health
+            port: 8000
+          initialDelaySeconds: 30
+          periodSeconds: 10

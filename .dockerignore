@@ -1,0 +1,14 @@
+venv/
+__pycache__/
+*.pyc
+.env
+.git/
+.gitignore
+data/
+mlflow/
+node_modules/
+dist/
+.DS_Store
+*.log
+backend/__pycache__/
+backend/*.pyc

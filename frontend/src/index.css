@@ -1,0 +1,187 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap');
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* ---- Dark background setup ---- */
+body {
+  background-color: #0c0c0f;
+  color: #e8e8e8;
+  font-family: 'Inter', sans-serif;
+  overflow: hidden;
+}
+
+/* ---- Animated Aurora Blobs (More vibrant for glass refraction) ---- */
+.aurora-bg {
+  position: fixed;
+  inset: 0;
+  z-index: -1;
+  overflow: hidden;
+}
+.aurora-blob {
+  position: absolute;
+  border-radius: 50%;
+  filter: blur(100px);
+  opacity: 0.5;
+  will-change: transform, opacity;
+  animation: float 25s ease-in-out infinite;
+}
+.blob-1 {
+  width: 600px;
+  height: 600px;
+  background: radial-gradient(circle, #2dd4bf 0%, transparent 70%);
+  top: -20%;
+  left: -10%;
+  animation-delay: 0s;
+}
+.blob-2 {
+  width: 500px;
+  height: 500px;
+  background: radial-gradient(circle, #818cf8 0%, transparent 70%);
+  bottom: -20%;
+  right: -10%;
+  animation-delay: -5s;
+}
+.blob-3 {
+  width: 400px;
+  height: 400px;
+  background: radial-gradient(circle, #fcd34d 0%, transparent 70%);
+  top: 50%;
+  left: 50%;
+  animation-delay: -10s;
+}
+
+/* ---- Floating Glass Orbs ---- */
+.glass-orb {
+  position: fixed;
+  border-radius: 50%;
+  background: radial-gradient(circle at 30% 30%, rgba(255,255,255,0.15), rgba(255,255,255,0.02) 70%);
+  backdrop-filter: blur(20px);
+  border: 1px solid rgba(255,255,255,0.08);
+  box-shadow: 0 20px 60px rgba(0,0,0,0.5);
+  pointer-events: none;
+  z-index: 0;
+  will-change: transform;
+}
+.orb-1 {
+  width: 300px;
+  height: 300px;
+  top: 10%;
+  right: 5%;
+  animation: float 18s ease-in-out infinite;
+}
+.orb-2 {
+  width: 200px;
+  height: 200px;
+  bottom: 10%;
+  left: 5%;
+  animation: float 22s ease-in-out infinite reverse;
+}
+
+@keyframes float {
+  0%, 100% { transform: translate(0, 0) scale(1); }
+  33% { transform: translate(30px, -50px) scale(1.1); }
+  66% { transform: translate(-20px, 20px) scale(0.9); }
+}
+
+/* ---- Scrollbars (Dark mode) ---- */
+::-webkit-scrollbar { width: 4px; height: 4px; }
+::-webkit-scrollbar-track { background: rgba(255,255,255,0.02); }
+::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.15); border-radius: 4px; }
+::-webkit-scrollbar-thumb:hover { background: rgba(255,255,255,0.3); }
+
+.chat-scroll {
+  overflow-y: auto !important;
+  height: 100%;
+  max-height: 100%;
+  flex: 1 1 0;
+  min-height: 0;
+}
+
+/* ---- Prose (Markdown styling for AI messages) ---- */
+.prose {
+  color: #e8e8e8;
+}
+.prose pre {
+  background: #1a1a1f;
+  color: #d4d4d4;
+  padding: 0.75rem;
+  border-radius: 0.5rem;
+  overflow-x: auto;
+  font-size: 0.75rem;
+  font-family: 'JetBrains Mono', monospace;
+  margin: 0.5rem 0;
+  border: 1px solid #2a2a2f;
+}
+.prose code {
+  background: #1a1a1f;
+  color: #fcd34d;
+  padding: 0.2rem 0.4rem;
+  border-radius: 0.25rem;
+  font-size: 0.75rem;
+  font-family: 'JetBrains Mono', monospace;
+}
+.prose p { margin: 0.25rem 0; }
+.prose ul, .prose ol { padding-left: 1.25rem; margin: 0.25rem 0; }
+.prose h1, .prose h2, .prose h3 { font-weight: 600; margin: 0.5rem 0 0.25rem; font-size: 1rem; }
+
+/* ---- Custom Clay/Glass utilities (overriding Tailwind with stronger effects) ---- */
+.shadow-clay {
+  box-shadow: 
+    inset 0 1px 1px rgba(255,255,255,0.1),
+    inset 0 -1px 1px rgba(0,0,0,0.3),
+    0 8px 32px rgba(0,0,0,0.4),
+    0 2px 8px rgba(0,0,0,0.2);
+}
+.shadow-clay-outer {
+  box-shadow: 
+    0 20px 60px rgba(0,0,0,0.5),
+    0 8px 24px rgba(0,0,0,0.3);
+}
+.shadow-glass {
+  box-shadow: 
+    0 8px 32px rgba(0,0,0,0.4),
+    inset 0 0 0 1px rgba(255,255,255,0.06);
+}
+.shadow-glass-hover {
+  box-shadow: 
+    0 12px 48px rgba(0,0,0,0.6),
+    inset 0 0 0 1px rgba(255,255,255,0.1);
+}
+
+/* ---- Shimmer animation for glass cards ---- */
+.shimmer-overlay {
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(105deg, transparent 40%, rgba(255,255,255,0.05) 50%, transparent 60%);
+  background-size: 200% 100%;
+  animation: shimmer 4s infinite;
+  pointer-events: none;
+  border-radius: inherit;
+  will-change: transform;
+}
+@keyframes shimmer {
+  0% { transform: translateX(-100%); }
+  100% { transform: translateX(100%); }
+}
+
+/* ---- Smooth, ultra-light scrollbars ---- */
+* {
+  scrollbar-width: thin;
+  scrollbar-color: rgba(255,255,255,0.1) transparent;
+}
+*::-webkit-scrollbar {
+  width: 4px;
+  height: 4px;
+}
+*::-webkit-scrollbar-track {
+  background: transparent;
+}
+*::-webkit-scrollbar-thumb {
+  background: rgba(255,255,255,0.15);
+  border-radius: 4px;
+}
+*::-webkit-scrollbar-thumb:hover {
+  background: rgba(255,255,255,0.3);
+}

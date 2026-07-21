@@ -1,3 +1,43 @@
-/config.local
+# ==================== Python ====================
+venv/
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+.Python
+*.so
+*.egg
+*.egg-info/
+dist/
+build/
+
+# ==================== Secrets & Databases ====================
+.env
+*.db
+*.sqlite
+*.sqlite3
+mlflow/
+mlflow/mlflow.db
+nexusai_local.db
+
+# ==================== Frontend ====================
+frontend/node_modules/
+frontend/dist/
+frontend/.vite/
+
+# ==================== Docker & Data ====================
+*.log
+data/
+*.pid
+
+# ==================== OS / IDE ====================
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/
+*.swp
+*.swo
+.dvc/
+.cache/
 /tmp
-/cache
+/config.local

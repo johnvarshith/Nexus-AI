@@ -1,63 +1,57 @@
-version: '3.8'
-
 services:
-  # ==================== POSTGRES + PGVECTOR ====================
   postgres:
     image: pgvector/pgvector:pg16
     container_name: nexusai-postgres
     environment:
-      POSTGRES_USER: ${POSTGRES_USER:-nexusai}
-      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-password}
-      POSTGRES_DB: ${POSTGRES_DB:-nexusai_db}
+      POSTGRES_USER: nexusai
+      POSTGRES_PASSWORD: varshith2004
+      POSTGRES_DB: nexusai_db
     ports:
-      - "${POSTGRES_PORT:-5432}:5432"
+      - "5432:5432"
     volumes:
       - postgres_data:/var/lib/postgresql/data
-      - ./data/vector_db:/var/lib/vector_db
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U nexusai"]
+      test: ["CMD-SHELL", "pg_isready -U nexusai -d nexusai_db"]
       interval: 10s
       timeout: 5s
       retries: 5
     networks:
       - nexusai-network
 
-  # ==================== BACKEND ====================
   backend:
     build:
       context: .
       dockerfile: infra/docker/Dockerfile.backend
     container_name: nexusai-backend
     environment:
-      DATABASE_URL: postgresql://${POSTGRES_USER:-nexusai}:${POSTGRES_PASSWORD:-password}@postgres:5432/${POSTGRES_DB:-nexusai_db}
+      DATABASE_URL: postgresql://nexusai:varshith2004@postgres:5432/nexusai_db
       OLLAMA_BASE_URL: http://host.docker.internal:11434
       MLFLOW_TRACKING_URI: http://mlflow:5000
+      USE_CLOUD_LLM: ${USE_CLOUD_LLM:-False}
+      OPENAI_API_KEY: ${OPENAI_API_KEY:-}
     ports:
-      - "${API_PORT:-8000}:8000"
+      - "8000:8000"
     volumes:
       - ./backend:/app/backend
       - ./data:/app/data
     depends_on:
       postgres:
         condition: service_healthy
-      mlflow:
-        condition: service_started
     extra_hosts:
       - "host.docker.internal:host-gateway"
     networks:
       - nexusai-network
     command: uvicorn backend.main:app --host 0.0.0.0 --port 8000 --reload
 
-  # ==================== MLFLOW ====================
   mlflow:
     image: python:3.11-slim
     container_name: nexusai-mlflow
     command: >
-      bash -c "pip install mlflow==2.9.2 && 
-               mlflow server 
-               --host 0.0.0.0 
-               --port 5000 
-               --backend-store-uri sqlite:///mlflow/mlflow.db 
+      bash -c "pip install mlflow==2.9.2 &&
+               mlflow server
+               --host 0.0.0.0
+               --port 5000
+               --backend-store-uri sqlite:///mlflow/mlflow.db
                --default-artifact-root /mlflow/artifacts"
     ports:
       - "5000:5000"
@@ -66,7 +60,6 @@ services:
     networks:
       - nexusai-network
 
-  # ==================== FRONTEND ====================
   frontend:
     build:
       context: ./frontend
@@ -74,18 +67,15 @@ services:
     container_name: nexusai-frontend
     ports:
       - "3000:3000"
-    volumes:
-      - ./frontend:/app
-      - /app/node_modules
+   
     environment:
-      - VITE_API_URL=http://localhost:8000
+      - VITE_API_URL=http://backend:8000
     depends_on:
       - backend
     networks:
       - nexusai-network
-    command: npm run dev -- --host 0.0.0.0
+    
 
-  # ==================== OLLAMA (Optional - if running separately) ====================
   ollama:
     image: ollama/ollama:latest
     container_name: nexusai-ollama
