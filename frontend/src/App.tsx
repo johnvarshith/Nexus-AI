@@ -3,7 +3,7 @@ import { AnimatePresence } from 'framer-motion';
 import { useChatStore } from './store/useChatStore';
 import {
   Send, Bot, User, MessageSquare, Copy, Pencil, ChevronDown,
-  Menu, X, Zap, Brain, Sparkles
+  Menu, X, Sparkles
 } from 'lucide-react';
 import LiquidGlassCard from './components/LiquidGlassCard';
 import ChatHistory from './components/ChatHistory';
