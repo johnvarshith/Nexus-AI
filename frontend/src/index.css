@@ -122,9 +122,43 @@ body {
   font-size: 0.75rem;
   font-family: 'JetBrains Mono', monospace;
 }
-.prose p { margin: 0.25rem 0; }
-.prose ul, .prose ol { padding-left: 1.25rem; margin: 0.25rem 0; }
-.prose h1, .prose h2, .prose h3 { font-weight: 600; margin: 0.5rem 0 0.25rem; font-size: 1rem; }
+.prose p {
+  margin: 0.25rem 0;
+}
+.prose ul, .prose ol {
+  padding-left: 1.25rem;
+  margin: 0.25rem 0;
+}
+.prose h1, .prose h2, .prose h3 {
+  font-weight: 600;
+  margin: 0.5rem 0 0.25rem;
+  font-size: 1rem;
+  color: #e8e8e8;
+}
+.prose a {
+  color: #60a5fa;
+  text-decoration: underline;
+}
+.prose blockquote {
+  border-left: 3px solid #374151;
+  padding-left: 0.75rem;
+  color: #9ca3af;
+  margin: 0.5rem 0;
+}
+.prose table {
+  border-collapse: collapse;
+  width: 100%;
+  margin: 0.5rem 0;
+}
+.prose th, .prose td {
+  border: 1px solid #2a2a2f;
+  padding: 0.3rem 0.5rem;
+  text-align: left;
+}
+.prose th {
+  background: #1a1a1f;
+  color: #e8e8e8;
+}
 
 /* ---- Custom Clay/Glass utilities (overriding Tailwind with stronger effects) ---- */
 .shadow-clay {

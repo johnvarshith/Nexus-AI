@@ -58,7 +58,16 @@ async def chat(request: ChatRequest):
         config = {"configurable": {"thread_id": thread_id}}
         logger.info(f"🚀 [Session: {thread_id}] Processing: {request.message[:60]}...")
 
-        result = agent_graph.invoke(initial_state, config=config)
+        try:
+            result = agent_graph.invoke(initial_state, config=config)
+        except Exception as e:
+            logger.error(f"Graph failed: {e}", exc_info=True)
+            return {
+                "response": "⚠️ The agent encountered a hiccup. Please try rephrasing your query or toggling 'Fast' mode.",
+                "thread_id": thread_id,
+                "trace_log": [{"agent": "System", "action": "Fallback triggered", "details": str(e)}],
+                "confidence_score": 0,
+            }
 
         ai_response = result.get('messages', [{}])[-1].get('content', "No response generated.")
         trace_log = result.get('trace_log', [])
@@ -73,7 +82,6 @@ async def chat(request: ChatRequest):
 
     except Exception as e:
         logger.error(f"❌ Graph invocation failed: {e}", exc_info=True)
-        # NEVER throw a raw 500 – return a safe fallback
         return {
             "response": "⚠️ The agent encountered an internal error. Please try rephrasing your query.",
             "thread_id": request.thread_id or str(uuid.uuid4()),

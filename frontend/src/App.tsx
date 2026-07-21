@@ -75,7 +75,8 @@ function App() {
     sendMessage,
     systemLogs,
     activeAgent,
-    newChat
+    newChat,
+    error,           // <-- Added error state
   } = useChatStore();
 
   const [input, setInput] = useState('');
@@ -140,8 +141,17 @@ function App() {
             {isHistoryOpen ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}
           </button>
           <div className="flex items-center gap-2">
-            <div className={`w-2 h-2 rounded-full ${isLoading ? 'bg-yellow-400 animate-pulse' : 'bg-emerald-400'}`} />
+            <div className={`w-2 h-2 rounded-full ${isLoading ? 'bg-yellow-400 animate-pulse' : error ? 'bg-rose-400' : 'bg-emerald-400'}`} />
             <span className="text-sm font-bold tracking-widest text-white">NEXUS<span className="text-emerald-400">AI</span></span>
+          </div>
+          <div className="flex items-center gap-2">
+            <span className="relative flex h-2 w-2">
+              <span className={`absolute inline-flex h-full w-full rounded-full ${error ? 'bg-rose-400 opacity-75' : 'bg-emerald-400 opacity-75'} ${!error && 'animate-ping'}`}></span>
+              <span className={`relative inline-flex rounded-full h-2 w-2 ${error ? 'bg-rose-500' : 'bg-emerald-500'}`}></span>
+            </span>
+            <span className={`text-[10px] font-mono ${error ? 'text-rose-400' : 'text-stone-500'}`}>
+              {error ? 'Error' : 'Live'}
+            </span>
           </div>
           <span className="text-[10px] font-mono text-stone-500 bg-white/5 px-2 py-0.5 rounded-full border border-white/5">
             Ops
@@ -149,6 +159,7 @@ function App() {
         </div>
 
         <div className="flex items-center gap-4">
+          {/* Fast / Deep Toggle - Updated with Groq models */}
           <label className="relative inline-flex items-center cursor-pointer group">
             <input
               type="checkbox"
@@ -157,13 +168,17 @@ function App() {
               onChange={(e) => setDeepThink(e.target.checked)}
             />
             <div className="w-10 h-5 bg-stone-700 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-emerald-500 shadow-sm" />
-            <span className="ml-2 text-xs font-medium text-stone-400 flex items-center gap-1">
-              {deepThink ? <Brain className="w-3 h-3 text-emerald-400" /> : <Zap className="w-3 h-3 text-stone-500" />}
-              {deepThink ? 'Deep' : 'Fast'}
+            <span className="ml-2 text-xs font-medium text-stone-400 flex items-center gap-2">
+              {deepThink ? (
+                <span className="text-emerald-400">🧠 Deep (70B)</span>
+              ) : (
+                <span className="text-blue-400">⚡ Fast (8B)</span>
+              )}
             </span>
           </label>
+          {/* Model badge - UPDATED for Groq */}
           <span className="text-[8px] font-mono text-stone-600 bg-white/5 px-1.5 py-0.5 rounded border border-white/5">
-            {deepThink ? 'phi3:3.8b' : 'qwen2.5:3b'}
+            {deepThink ? 'Llama 3.3 70B' : 'Llama 3.1 8B'}
           </span>
           <button
             onClick={handleNewChat}
@@ -189,6 +204,14 @@ function App() {
         <main className="flex-1 min-w-0 flex flex-col bg-black/20 backdrop-blur-sm min-h-0">
           <div className="flex-1 flex flex-col min-h-0 mx-2 my-2 bg-white/5 backdrop-blur-2xl border border-white/5 rounded-2xl shadow-clay overflow-hidden">
             
+            {/* Error Banner - shows when backend fails */}
+            {error && (
+              <div className="px-4 py-2 bg-rose-500/20 border-b border-rose-500/30 text-rose-400 text-xs font-mono flex items-center gap-2 shrink-0">
+                <span>⚠️</span>
+                {error}
+              </div>
+            )}
+
             {!hasMessages ? (
               /* ---- EMPTY STATE ---- */
               <div className="flex-1 flex flex-col items-center justify-center gap-6 p-6">
@@ -269,7 +292,7 @@ function App() {
                   <div ref={messagesEndRef} />
                 </div>
 
-                {/* ---- COMPACT INPUT BAR (FIXED HEIGHT) ---- */}
+                {/* ---- COMPACT INPUT BAR ---- */}
                 <div ref={inputBarRef} className="p-3 border-t border-white/5 shrink-0 bg-black/40 backdrop-blur-2xl">
                   <form onSubmit={handleSubmit} className="relative w-full">
                     <input
@@ -297,6 +320,7 @@ function App() {
 
         {/* RIGHT PANEL: TELEMETRY */}
         <aside className="w-72 lg:w-80 xl:w-96 shrink-0 flex flex-col gap-2 p-2 overflow-hidden bg-black/20 backdrop-blur-sm border-l border-white/5 min-h-0">
+          {/* Agent Telemetry Grid */}
           <LiquidGlassCard className="p-3 bg-white/5 border-white/10 flex-shrink-0">
             <div className="grid grid-cols-3 gap-2">
               {['Planner', 'Researcher', 'Coder', 'Critic', 'Writer'].map((agent) => {
@@ -320,6 +344,7 @@ function App() {
             </div>
           </LiquidGlassCard>
 
+          {/* System Logs */}
           <LiquidGlassCard className="flex-1 min-h-0 p-2 bg-white/5 border-white/10 flex flex-col">
             <div className="flex items-center justify-between mb-1.5 px-1 flex-shrink-0">
               <span className="text-[10px] font-mono font-semibold text-stone-400">📟 SYSTEM LOGS</span>
@@ -337,6 +362,7 @@ function App() {
             </div>
           </LiquidGlassCard>
 
+          {/* Metrics */}
           <LiquidGlassCard className="p-2 bg-white/5 border-white/10 flex-shrink-0">
             <div className="flex justify-around text-[10px] font-mono text-stone-500">
               <span>Tokens: <span className="text-white">{metrics.tokens ?? 0}</span></span>

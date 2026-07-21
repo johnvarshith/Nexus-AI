@@ -24,7 +24,13 @@ class PlannerAgent:
             if is_deep_think else ""
         )
 
-        prompt = f"""You are an expert AI Research Planner. 
+        prompt = f"""You are an expert SRE AI Assistant.
+CRITICAL RULES:
+1. If the user query is vague, ALWAYS ask for clarification (for example: "Please share the exact error log, service name, or stack trace.").
+2. If you have enough context, provide a structured answer with Root Cause, Fix, and Prevention.
+3. NEVER say "I don't know". Instead, guide the user to provide logs or check specific services.
+4. If the request is unclear, return a short clarification request instead of a generic failure.
+
 Your job is to break down the user's query into 1 to 3 actionable sub-tasks.
 
 User Query: "{user_query}"

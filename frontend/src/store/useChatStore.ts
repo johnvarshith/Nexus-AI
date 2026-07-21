@@ -32,7 +32,9 @@ interface ChatState {
   activeAgent: string | null;
   systemLogs: string[];
   metrics: Metrics;
+  lastConfidence: number | null;
   threadId: string | null;
+  error: string | null;  // <-- ADDED
 
   sendMessage: (text: string, deepThink?: boolean) => Promise<void>;
   addLog: (log: string) => void;
@@ -40,6 +42,7 @@ interface ChatState {
   switchThread: (threadId: string) => void;
   newChat: () => void;
   setActiveAgent: (agent: string | null) => void;
+  clearError: () => void;  // <-- ADDED
 }
 
 export const useChatStore = create<ChatState>((set, get) => ({
@@ -48,9 +51,11 @@ export const useChatStore = create<ChatState>((set, get) => ({
   messages: [],
   isLoading: false,
   activeAgent: null,
-  systemLogs: ["[SYSTEM] NexusAI Dashboard initialized.", "[SYSTEM] Connected to local Ollama."],
+  systemLogs: ["[SYSTEM] NexusAI Dashboard initialized.", "[SYSTEM] Connected to Groq Cloud."],
   metrics: { tokens: 0, latency: 0, tasks: 0 },
+  lastConfidence: null,
   threadId: null,
+  error: null,  // <-- ADDED
 
   addLog: (log: string) => {
     const time = new Date().toLocaleTimeString('en-US', { hour12: false });
@@ -60,6 +65,7 @@ export const useChatStore = create<ChatState>((set, get) => ({
   },
 
   setActiveAgent: (agent: string | null) => set({ activeAgent: agent }),
+  clearError: () => set({ error: null }),
 
   newChat: () => {
     const { messages, threads, currentThreadId } = get();
@@ -89,7 +95,9 @@ export const useChatStore = create<ChatState>((set, get) => ({
       messages: [],
       threadId: null,
       currentThreadId: null,
-      metrics: { tokens: 0, latency: 0, tasks: 0 }
+      lastConfidence: null,
+      metrics: { tokens: 0, latency: 0, tasks: 0 },
+      error: null,
     });
     get().addLog("Started new chat.");
   },
@@ -114,14 +122,21 @@ export const useChatStore = create<ChatState>((set, get) => ({
       messages: thread.messages,
       currentThreadId: thread.id,
       threadId: thread.id,
+      lastConfidence: null,
+      error: null,
     });
     get().addLog(`Loaded: ${thread.title}`);
   },
 
   sendMessage: async (text: string, deepThink: boolean = false) => {
     if (!text.trim()) return;
+    
+    // Clear previous errors
+    set({ error: null });
+    
     const startTime = Date.now();
     const { threadId } = get();
+    const apiUrl = import.meta.env.VITE_API_URL || 'http://localhost:8000';
 
     const userMessage: Message = {
       id: generateId(),
@@ -134,6 +149,7 @@ export const useChatStore = create<ChatState>((set, get) => ({
       messages: [...state.messages, userMessage],
       isLoading: true,
       activeAgent: 'Planner',
+      error: null,
     }));
     get().addLog(`USER: "${text.substring(0, 40)}..."`);
 
@@ -144,10 +160,12 @@ export const useChatStore = create<ChatState>((set, get) => ({
     }
 
     try {
-      const res = await axios.post('http://localhost:8000/api/chat', {
+      const res = await axios.post(`${apiUrl}/api/chat`, {
         message: text,
         thread_id: currentThreadIdToSend,
         deep_think: deepThink,
+      }, {
+        timeout: 60000, // 60 second timeout for Render cold starts
       });
 
       const latency = Date.now() - startTime;
@@ -192,22 +210,37 @@ export const useChatStore = create<ChatState>((set, get) => ({
           messages: newMessages,
           isLoading: false,
           activeAgent: null,
+          lastConfidence: confidence,
           metrics: {
             tokens: state.metrics.tokens + Math.floor(aiContent.length / 4),
-            latency: latency,
+            latency: latency,  // ✅ Correctly stores latency in ms
             tasks: state.metrics.tasks + 1
           },
           threads: finalThreads,
           threadId: state.threadId || finalThreads[0]?.id,
           currentThreadId: state.currentThreadId || finalThreads[0]?.id,
+          error: null,
         };
       });
       get().addLog(`SUCCESS: ${latency}ms (Conf: ${confidence}%)`);
 
-    } catch (err) {
+    } catch (err: any) {
       console.error(err);
-      get().addLog("ERROR: Backend unreachable");
-      set({ isLoading: false, activeAgent: null });
+      let errorMsg = "Failed to connect to backend. Please try again.";
+      if (err.code === 'ECONNABORTED') {
+        errorMsg = "Request timed out. The backend might be waking up (cold start) – please wait a moment and retry.";
+      } else if (err.response?.status === 500) {
+        errorMsg = "Backend error (500). Please try a different query or toggle Fast/Deep mode.";
+      } else if (err.response?.status === 422) {
+        errorMsg = "Invalid request format. Please simplify your query.";
+      }
+      
+      set({
+        isLoading: false,
+        activeAgent: null,
+        error: errorMsg,
+      });
+      get().addLog(`ERROR: ${errorMsg}`);
     }
   },
 

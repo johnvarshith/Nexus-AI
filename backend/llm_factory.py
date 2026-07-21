@@ -11,10 +11,11 @@ def get_llm(
     """
     Returns the appropriate LLM based on USE_CLOUD_LLM flag.
     """
+    model_to_use = settings.GROQ_DEEP_MODEL if deep_think else settings.GROQ_FAST_MODEL
     if settings.USE_CLOUD_LLM:
         return ChatGroq(
             api_key=settings.GROQ_API_KEY,
-            model=settings.GROQ_MODEL,
+            model=model_to_use,
             temperature=temperature,
             max_tokens=max_tokens,
         )
