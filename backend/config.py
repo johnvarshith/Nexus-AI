@@ -29,6 +29,7 @@ class Settings(BaseSettings):
     GROQ_API_KEY: Optional[str] = None
     GROQ_FAST_MODEL: str = "llama-3.1-8b-instant"      # Blazing fast ~1s
     GROQ_DEEP_MODEL: str = "llama-3.3-70b-versatile"   # Deep reasoning ~3s
+    GROQ_MODEL: Optional[str] = None
     # Database
     DATABASE_URL: str = "postgresql://nexusai:password@localhost:5432/nexusai_db"
     POSTGRES_USER: str = "nexusai"
