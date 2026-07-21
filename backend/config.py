@@ -24,9 +24,9 @@ class Settings(BaseSettings):
     OPENAI_MODEL: str = "gpt-4o-mini"
 
     # Groq (Ultra-fast, free tier available)
+    USE_CLOUD_LLM: bool = True
     GROQ_API_KEY: Optional[str] = None
-    GROQ_MODEL: str = "llama3-70b-8192"
-
+    GROQ_MODEL: str = "llama-3.3-70b-versatile" 
     # Database
     DATABASE_URL: str = "postgresql://nexusai:password@localhost:5432/nexusai_db"
     POSTGRES_USER: str = "nexusai"

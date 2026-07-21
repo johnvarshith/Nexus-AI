@@ -1,17 +1,11 @@
-from langchain_ollama import ChatOllama
-from backend.config import settings
 from backend.agents.state import AgentState
+from backend.llm_factory import get_llm
 import sys
 from io import StringIO
 
 class CoderAgent:
     def __init__(self):
-        self.llm = ChatOllama(
-            model=settings.OLLAMA_CODER_MODEL,
-            base_url=settings.OLLAMA_BASE_URL,
-            temperature=0.2,
-            model_kwargs={"num_predict": 150}   # 👈 ADDED
-        )
+        pass
     
     def extract_python_code(self, text: str) -> str:
         if "```python" in text:
@@ -81,7 +75,8 @@ Write a Python script that:
 Output ONLY the Python code. Do not include explanations or markdown formatting."""
 
         print("⏳ [Coder] Generating code...")
-        response = self.llm.invoke(prompt)
+        llm = get_llm(temperature=0.2, max_tokens=300)
+        response = llm.invoke(prompt)
         code = self.extract_python_code(response.content)
         
         print("⚙️ [Coder] Executing generated code...")

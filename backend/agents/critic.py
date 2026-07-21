@@ -1,6 +1,5 @@
-from langchain_ollama import ChatOllama
-from backend.config import settings
 from backend.agents.state import AgentState
+from backend.llm_factory import get_llm
 import json
 import logging
 import re
@@ -10,12 +9,7 @@ logger = logging.getLogger(__name__)
 
 class CriticAgent:
     def __init__(self):
-        self.llm = ChatOllama(
-            model=settings.OLLAMA_MAIN_MODEL,
-            base_url=settings.OLLAMA_BASE_URL,
-            temperature=0.1,
-            model_kwargs={"num_predict": 150}   # 👈 ADDED
-        )
+        pass
     
     def critique(self, state: AgentState) -> dict:
         if not state.get('messages'):
@@ -75,7 +69,8 @@ Output ONLY a valid JSON object (no markdown):
 }}"""
 
         try:
-            response = self.llm.invoke(prompt)
+            llm = get_llm(temperature=0.1, max_tokens=250)
+            response = llm.invoke(prompt)
             content = response.content.strip()
             
             # Extract JSON with regex

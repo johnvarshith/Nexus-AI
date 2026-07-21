@@ -6,6 +6,7 @@ from backend.agents.researcher import researcher_node
 from backend.agents.coder import coder_node
 from backend.agents.critic import CriticAgent
 from backend.agents.clarifier import clarifier_node
+from backend.llm_factory import get_llm
 from typing import Literal
 
 planner = PlannerAgent()
@@ -13,15 +14,10 @@ critic = CriticAgent()
 
 def writer_node(state: AgentState) -> dict:
     print("✍️ [Writer] Generating final Incident Report...")
-    from langchain_ollama import ChatOllama
-    from backend.config import settings
-    
-    model = settings.OLLAMA_MAIN_MODEL if state.get('deep_think') else settings.OLLAMA_FAST_MODEL
-    llm = ChatOllama(
-        model=model,
-        base_url=settings.OLLAMA_BASE_URL,
+    llm = get_llm(
         temperature=0.3,
-        model_kwargs={"num_predict": 200}   # 👈 ADDED token limit
+        max_tokens=300,
+        deep_think=state.get('deep_think', False),
     )
     
     context = "\n\n".join([msg['content'] for msg in state['messages']])
