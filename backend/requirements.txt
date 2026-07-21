@@ -1,20 +1,19 @@
 # ==================== CORE ====================
-fastapi>=0.111.0
-uvicorn[standard]>=0.30.0
-python-dotenv>=1.0.1
-pydantic>=2.7.0
-pydantic-settings>=2.3.0
-python-multipart>=0.0.9
+fastapi==0.109.0
+uvicorn[standard]==0.27.0
+python-dotenv==1.0.0
+pydantic==2.5.3
+pydantic-settings==2.1.0
+python-multipart==0.0.6
 
-# ==================== LANGCHAIN GROQ (Cloud) ====================
-langchain-groq==0.2.4
-langchain-core==0.3.33
+# ==================== LANGCHAIN GROQ (0.3.x Stack) ====================
 langchain==0.3.15
+langchain-core==0.3.33
 langchain-community==0.3.15
+langchain-text-splitters==0.3.5
 langgraph==0.2.60
-
-# ==================== OLLAMA (Optional, kept for local fallback) ====================
 langchain-ollama==0.2.3
+langchain-groq==0.2.4
 ollama>=0.3.0
 
 # ==================== UTILITIES ====================
