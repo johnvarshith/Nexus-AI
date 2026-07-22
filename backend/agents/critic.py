@@ -9,7 +9,7 @@ logger = logging.getLogger(__name__)
 
 class CriticAgent:
     def __init__(self):
-        pass
+        self.llm = get_llm(temperature=0.1, max_tokens=250)
     
     def critique(self, state: AgentState) -> dict:
         if not state.get('messages'):
@@ -20,9 +20,9 @@ class CriticAgent:
                 "messages": [{"role": "assistant", "content": "Error: No messages found."}]
             }
 
-        original_error = str(state['messages'][0].get('content', 'No error.')) if state['messages'] else "No error."
-
-        # 🚀 NEW: ONLY trigger if the input is TRULY empty or just whitespace
+        original_error = state['messages'][0]['content'] if state['messages'] else "No error."
+        
+        # Only trigger clarifier if the input is completely empty
         if not original_error or original_error.strip() == "":
             return {
                 "confidence_score": 10,
@@ -32,9 +32,9 @@ class CriticAgent:
                 "trace_log": [{"agent": "Critic", "action": "Triggered Clarifier (Empty Input)"}]
             }
 
-        coder_output = str(state['messages'][-1].get('content', 'No code provided.')) if len(state['messages']) > 1 else "No code provided."
+        coder_output = state['messages'][-1]['content'] if len(state['messages']) > 1 else "No code provided."
         
-        # Extract research context if available
+        # Extract research context
         research_context = "No research findings."
         for msg in state['messages']:
             if "SYSTEM LOGS:" in msg['content']:
@@ -61,11 +61,11 @@ Output ONLY a valid JSON object (no markdown):
 }}"""
 
         try:
-            llm = get_llm(temperature=0.1, max_tokens=250)
-            response = llm.invoke(prompt)
+            response = self.llm.invoke(prompt)
             content = response.content.strip()
             
             # Extract JSON with regex
+            import re
             match = re.search(r'\{.*\}', content, re.DOTALL)
             if not match:
                 raise ValueError("No JSON found")
@@ -77,6 +77,7 @@ Output ONLY a valid JSON object (no markdown):
             
             logger.info(f"⚖️ [Critic] {status} | {confidence}% | {feedback}")
             
+            # If confidence is low, trigger clarifier (but this is the LLM's decision)
             if confidence < 60:
                 return {
                     "confidence_score": confidence,
