@@ -67,10 +67,10 @@ PREVIOUS ATTEMPT FEEDBACK (Critic):
 YOUR TASK:
 {current_task}
 
-Write a Python script that:
-1. Demonstrates the fix for the issue.
-2. Includes proper error handling.
-3. Is production-ready.
+Write a Python script that demonstrates the fix in a safe, actionable way. The script should:
+1. Print the exact shell commands or configuration changes the operator should run manually.
+2. Include clear comments and basic validation.
+3. Avoid trying to directly mutate running services or infrastructure from inside Python.
 
 Output ONLY the Python code. Do not include explanations or markdown formatting."""
 

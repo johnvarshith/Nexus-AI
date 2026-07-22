@@ -78,7 +78,7 @@ Output ONLY a valid JSON object (no markdown):
             logger.info(f"⚖️ [Critic] {status} | {confidence}% | {feedback}")
             
             # If confidence is low, trigger clarifier (but this is the LLM's decision)
-            if confidence < 60:
+            if confidence < 30:
                 return {
                     "confidence_score": confidence,
                     "fix_status": "PAUSED",
