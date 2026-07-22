@@ -21,23 +21,15 @@ class CriticAgent:
             }
 
         original_error = str(state['messages'][0].get('content', 'No error.')) if state['messages'] else "No error."
-        word_count = len(original_error.split())
-        # Heuristic to detect vague inputs before running the LLM
-        vague_signals = ["broken", "not working", "server down", "something", "wrong", "issue", "problem", "isn't", "wasn't"]
-        technical_keywords = ["error", "exception", "timeout", "deadlock", "oom", "crash", "fail", "denied", "expired",
-                              "null", "index", "connection", "pool", "ssl", "tls", "dns", "kafka", "lag", "s3", "iam",
-                              "role", "deployment", "pod", "container", "prometheus", "scrape", "metric", "latency", "slow"]
 
-        is_vague = any(kw in original_error.lower() for kw in vague_signals)
-        has_tech = any(kw in original_error.lower() for kw in technical_keywords)
-        if word_count <= 6 or (is_vague and not has_tech):
-            print(f"🛑 [Critic] Vague input ({word_count} words). Triggering Clarifier.")
+        # 🚀 NEW: ONLY trigger if the input is TRULY empty or just whitespace
+        if not original_error or original_error.strip() == "":
             return {
                 "confidence_score": 10,
                 "fix_status": "PAUSED",
                 "needs_clarification": True,
-                "clarification_question": "The input is too vague. Could you provide specific error logs, service names, or stack traces?",
-                "trace_log": [{"agent": "Critic", "action": "Triggered Clarifier (Vague Input)", "details": "Insufficient context to provide a fix"}]
+                "clarification_question": "Please provide a detailed description of the issue.",
+                "trace_log": [{"agent": "Critic", "action": "Triggered Clarifier (Empty Input)"}]
             }
 
         coder_output = str(state['messages'][-1].get('content', 'No code provided.')) if len(state['messages']) > 1 else "No code provided."
