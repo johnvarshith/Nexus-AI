@@ -58,25 +58,26 @@ def route_after_researcher(state: AgentState) -> Literal["coder", "writer"]:
 
 def route_after_critic(state: AgentState) -> Literal["writer", "coder", "clarifier"]:
     status = state.get('fix_status', 'REJECTED')
-    confidence = state.get('confidence_score', 0)
     needs_clarification = state.get('needs_clarification', False)
     retry_count = state.get('retry_count', 0)
     
-    # If clarification is needed, go to clarifier immediately
+    # If the Critic triggered a clarification request (low confidence), go to Clarifier
     if needs_clarification:
         return "clarifier"
     
-    if status == "APPROVED" and confidence >= 85:
-        print(f"✅ [Router] Approved with {confidence}%. Routing to Writer.")
+    # If the Critic approved the fix, go to Writer immediately – no confidence threshold needed
+    if status == "APPROVED":
+        print(f"✅ [Router] Approved. Routing to Writer.")
         return "writer"
     
+    # If we've exhausted retries, ask for clarification
     if retry_count >= 2:
         print(f"🛑 [Router] Max retries ({retry_count}) reached. Routing to Clarifier.")
         return "clarifier"
     
+    # Otherwise, try again (Coder)
     print(f"🔄 [Router] Rejected. Routing back to Coder (Attempt {retry_count + 1}).")
     return "coder"
-
 # --- BUILD THE GRAPH ---
 workflow = StateGraph(AgentState)
 
