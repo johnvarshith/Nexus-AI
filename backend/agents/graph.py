@@ -22,27 +22,43 @@ def writer_node(state: AgentState) -> dict:
     
     latest_user_query = ""
     latest_fix = ""
+    critic_feedback = ""
+    
     for msg in reversed(state.get('messages', [])):
         if msg['role'] == 'user' and not latest_user_query:
             latest_user_query = msg['content']
+        if msg['role'] == 'assistant' and "CRITIC FEEDBACK:" in msg['content']:
+            critic_feedback = msg['content']
         if msg['role'] == 'assistant' and ("Generated Code:" in msg['content'] or "PROPOSED CODE FIX" in msg['content']):
             latest_fix = msg['content']
             break
-
-    recent_context = state.get('messages', [])[-3:]
+    
+    fix_status = state.get('fix_status', 'PENDING')
+    confidence = state.get('confidence_score', 0)
+    recent_context = state.get('messages', [])[-5:]
     prompt = f"""You are an SRE writing a final Incident Report.
-    **CRITICAL: Focus ONLY on the MOST RECENT user query and the fix provided for that specific query. Ignore older conversations.**
+
+    **CRITICAL: Focus ONLY on the MOST RECENT user query.**
     
     Latest User Query: {latest_user_query}
-    Latest Code/Fix Generated: {latest_fix}
-    Overall Context (for reference only): {recent_context}
     
-    Confidence Score: {state.get('confidence_score', 0)}%
+    Generated Code/Fix: {latest_fix if latest_fix else 'No fix was generated.'}
     
-    Output a clean, professional Markdown Incident Report with sections: 
-    1. Root Cause Analysis
-    2. Proposed Fix
-    3. Prevention Steps"""
+    Critic's Feedback: {critic_feedback if critic_feedback else 'No feedback provided.'}
+    
+    Fix Status: {fix_status}
+    Confidence Score: {confidence}%
+    
+    RESEARCH LOGS (for context):
+    {recent_context}
+    
+    **Instructions:**
+    - If the fix was APPROVED, write a confident report with the fix steps.
+    - If the fix was REJECTED, write a report explaining the rejection, the research findings, and suggest alternative approaches or ask the user for specific logs.
+    - Always include Root Cause Analysis, Proposed Fix (or attempted fix), and Prevention Steps.
+    - Be honest about what worked and what didn't.
+    
+    Output a clean, professional Markdown Incident Report."""
     
     response = llm.invoke(prompt)
     return {"messages": [{"role": "assistant", "content": response.content}]}
@@ -69,26 +85,32 @@ def route_after_researcher(state: AgentState) -> Literal["coder", "writer"]:
     return agent
 
 def route_after_critic(state: AgentState) -> Literal["writer", "coder", "clarifier"]:
+    """
+    Routes after Critic:
+    - If the Critic explicitly asks for clarification (rare, only for empty inputs), go to Clarifier.
+    - If the fix is APPROVED, go to Writer.
+    - If the fix is REJECTED, force the Writer to generate a report with the rejection feedback.
+    - If retry count exceeds 2, still go to Writer (do NOT ask for clarification).
+    """
     status = state.get('fix_status', 'REJECTED')
     needs_clarification = state.get('needs_clarification', False)
     retry_count = state.get('retry_count', 0)
     
-    # If the Critic triggered a clarification request (low confidence), go to Clarifier
+    # ONLY go to Clarifier if the critic explicitly asks for it (extremely rare)
     if needs_clarification:
+        print(f"🛑 [Router] Explicit clarification requested. Routing to Clarifier.")
         return "clarifier"
     
-    # If the Critic approved the fix, go to Writer immediately – no confidence threshold needed
-    if status == "APPROVED":
-        print(f"✅ [Router] Approved. Routing to Writer.")
+    # If approved or rejected, go to Writer (forced report generation)
+    if status in ["APPROVED", "REJECTED"]:
+        if retry_count >= 2:
+            print(f"🛑 [Router] Max retries ({retry_count}) reached. Forcing Writer to generate report.")
+        else:
+            print(f"🔄 [Router] Status: {status}. Routing to Writer (even if rejected).")
         return "writer"
     
-    # If we've exhausted retries, ask for clarification
-    if retry_count >= 2:
-        print(f"🛑 [Router] Max retries ({retry_count}) reached. Routing to Clarifier.")
-        return "clarifier"
-    
-    # Otherwise, try again (Coder)
-    print(f"🔄 [Router] Rejected. Routing back to Coder (Attempt {retry_count + 1}).")
+    # Fallback: if status is PENDING or unknown, retry with Coder
+    print(f"🔄 [Router] Status: {status}. Routing back to Coder (Attempt {retry_count + 1}).")
     return "coder"
 # --- BUILD THE GRAPH ---
 workflow = StateGraph(AgentState)
