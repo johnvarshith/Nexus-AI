@@ -285,7 +285,7 @@ Distributed under the MIT License. See `LICENSE` file for more information.
 <p align="center">
   <sub>Built with ❤️ by <a href="https://github.com/johnvarshith">Varshith</a></sub>
 </p>
-```
+
 
 
 
