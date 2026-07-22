@@ -68,14 +68,18 @@ YOUR TASK:
 {current_task}
 
 Write a Python script that applies the fix. The script should:
-1. Print the exact command(s) to run to resolve the issue (for example, redis-cli CONFIG SET maxclients 500).
-2. Optionally, perform the fix using subprocess or a client library, but prefer printing the command so the human can verify.
-3. Include error handling and verification steps.
+1. Print the exact command(s) to run to resolve the issue. For example:
+   - If Redis: `print('redis-cli CONFIG SET maxclients 500')`
+   - If Postgres: `print('ALTER SYSTEM SET max_connections = 200; SELECT pg_reload_conf();')`
+   - If Kubernetes: `print('kubectl set image deployment/checkout-service checkout-service=new-image')`
+2. Optionally, execute the command using subprocess, but prefer printing so the human can verify.
+3. Include a verification step (for example, `print('redis-cli CONFIG GET maxclients')` to confirm the change).
+4. Add error handling for failed commands.
 
-Output ONLY the Python code. Do not include explanations or markdown formatting."""
+Output ONLY the Python code. No explanations, no markdown formatting."""
 
         print("⏳ [Coder] Generating code...")
-        llm = get_llm(temperature=0.2, max_tokens=300)
+        llm = get_llm(temperature=0.2, max_tokens=400)
         response = llm.invoke(prompt)
         code = self.extract_python_code(response.content)
         

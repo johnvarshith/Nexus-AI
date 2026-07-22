@@ -70,7 +70,7 @@ def route_after_critic(state: AgentState) -> Literal["writer", "coder", "clarifi
         print(f"✅ [Router] Approved with {confidence}%. Routing to Writer.")
         return "writer"
     
-    if retry_count >= 1:
+    if retry_count >= 2:
         print(f"🛑 [Router] Max retries ({retry_count}) reached. Routing to Clarifier.")
         return "clarifier"
     

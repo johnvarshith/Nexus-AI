@@ -25,14 +25,7 @@ class ChatRequest(BaseModel):
     history: List[Dict[str, str]] = []
     deep_think: bool = False
     thread_id: Optional[str] = None
-@app.get("/api/tools")
-async def get_tools():
-    return {"tools": list_tools()}
 
-@app.post("/api/tools/call")
-async def execute_tool(name: str, arguments: dict):
-    result = await call_tool(name, arguments)
-    return {"result": result}
 @app.post("/api/chat")
 async def chat(request: ChatRequest):
     if not request.message or not request.message.strip():
