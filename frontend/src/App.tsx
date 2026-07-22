@@ -23,8 +23,17 @@ const MessageBubble = ({ msg, onEdit }: { msg: any; onEdit: (text: string) => vo
   const content = typeof msg.content === 'string' ? msg.content : String(msg.content ?? '');
   const isClarification = content.includes("🛑 CLARIFICATION NEEDED:");
   const isUser = msg.role === 'user';
+  const [copied, setCopied] = useState(false);
 
-  const handleCopy = () => navigator.clipboard.writeText(content);
+  const handleCopy = async () => {
+    try {
+      await navigator.clipboard.writeText(content);
+      setCopied(true);
+      window.setTimeout(() => setCopied(false), 1200);
+    } catch {
+      // no-op
+    }
+  };
   const handleEdit = () => onEdit(content);
 
   return (
@@ -49,15 +58,18 @@ const MessageBubble = ({ msg, onEdit }: { msg: any; onEdit: (text: string) => vo
           <div className="prose prose-sm max-w-none">
             {content}
           </div>
-          <div className="absolute top-2 right-2 flex gap-1 opacity-0 hover:opacity-100 transition-opacity">
+          <div className={`absolute top-2 right-2 flex items-center gap-1 ${copied ? 'opacity-100' : 'opacity-0 hover:opacity-100'} transition-opacity`}>
             {isUser ? (
               <button onClick={handleEdit} className="p-1 rounded-lg hover:bg-white/10 text-stone-500 hover:text-stone-300">
                 <Pencil className="w-3.5 h-3.5" />
               </button>
             ) : (
-              <button onClick={handleCopy} className="p-1 rounded-lg hover:bg-white/10 text-stone-500 hover:text-stone-300">
-                <Copy className="w-3.5 h-3.5" />
-              </button>
+              <>
+                {copied && <span className="text-[10px] text-emerald-400">Copied!</span>}
+                <button onClick={handleCopy} className="p-1 rounded-lg hover:bg-white/10 text-stone-500 hover:text-stone-300">
+                  <Copy className="w-3.5 h-3.5" />
+                </button>
+              </>
             )}
           </div>
         </div>

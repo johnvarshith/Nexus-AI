@@ -77,16 +77,6 @@ Output ONLY a valid JSON object (no markdown):
             
             logger.info(f"⚖️ [Critic] {status} | {confidence}% | {feedback}")
             
-            # If confidence is low, trigger clarifier (but this is the LLM's decision)
-            if confidence < 15:
-                return {
-                    "confidence_score": confidence,
-                    "fix_status": "PAUSED",
-                    "needs_clarification": True,
-                    "clarification_question": f"I'm not confident ({confidence}%). {feedback} Can you provide more logs?",
-                    "trace_log": [{"agent": "Critic", "action": "Triggered Clarifier (Low Confidence)", "details": feedback}]
-                }
-            
             if status == "REJECTED":
                 return {
                     "confidence_score": confidence,
