@@ -41,6 +41,8 @@ interface ChatState {
   clearChat: () => void;
   switchThread: (threadId: string) => void;
   newChat: () => void;
+  renameThread: (id: string, newTitle: string) => void;
+  deleteThread: (id: string) => void;
   setActiveAgent: (agent: string | null) => void;
   clearError: () => void;  // <-- ADDED
 }
@@ -126,6 +128,24 @@ export const useChatStore = create<ChatState>((set, get) => ({
       error: null,
     });
     get().addLog(`Loaded: ${thread.title}`);
+  },
+
+  renameThread: (id: string, newTitle: string) => {
+    set((state) => ({
+      threads: state.threads.map((t) =>
+        t.id === id ? { ...t, title: newTitle } : t
+      ),
+    }));
+  },
+
+  deleteThread: (id: string) => {
+    set((state) => {
+      const filtered = state.threads.filter((t) => t.id !== id);
+      if (state.currentThreadId === id) {
+        return { threads: filtered, messages: [], currentThreadId: null, threadId: null };
+      }
+      return { threads: filtered };
+    });
   },
 
   sendMessage: async (text: string, deepThink: boolean = false) => {

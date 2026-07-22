@@ -16,16 +16,28 @@ def writer_node(state: AgentState) -> dict:
     print("✍️ [Writer] Generating final Incident Report...")
     llm = get_llm(
         temperature=0.3,
-        max_tokens=300,
+        max_tokens=400,
         deep_think=state.get('deep_think', False),
     )
     
-    context = "\n\n".join([msg['content'] for msg in state['messages']])
-    prompt = f"""You are an SRE writing a final Incident Report. 
-    Confidence Score: {state.get('confidence_score', 0)}%
+    latest_user_query = ""
+    latest_fix = ""
+    for msg in reversed(state.get('messages', [])):
+        if msg['role'] == 'user' and not latest_user_query:
+            latest_user_query = msg['content']
+        if msg['role'] == 'assistant' and ("Generated Code:" in msg['content'] or "PROPOSED CODE FIX" in msg['content']):
+            latest_fix = msg['content']
+            break
+
+    recent_context = state.get('messages', [])[-3:]
+    prompt = f"""You are an SRE writing a final Incident Report.
+    **CRITICAL: Focus ONLY on the MOST RECENT user query and the fix provided for that specific query. Ignore older conversations.**
     
-    Context:
-    {context}
+    Latest User Query: {latest_user_query}
+    Latest Code/Fix Generated: {latest_fix}
+    Overall Context (for reference only): {recent_context}
+    
+    Confidence Score: {state.get('confidence_score', 0)}%
     
     Output a clean, professional Markdown Incident Report with sections: 
     1. Root Cause Analysis
