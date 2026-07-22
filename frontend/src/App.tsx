@@ -3,11 +3,12 @@ import { AnimatePresence } from 'framer-motion';
 import { useChatStore } from './store/useChatStore';
 import {
   Send, Bot, User, MessageSquare, Copy, Pencil, ChevronDown,
-  Menu, X, Sparkles
+  Menu, X, Sparkles, Activity
 } from 'lucide-react';
 import LiquidGlassCard from './components/LiquidGlassCard';
 import ChatHistory from './components/ChatHistory';
 import AgentTraceTimeline from './components/AgentTraceTimeline';
+import { useWindowSize } from './hooks/useWindowSize';
 
 // ---- Loading Dots ----
 const LoadingDots = () => (
@@ -38,7 +39,7 @@ const MessageBubble = ({ msg, onEdit }: { msg: any; onEdit: (text: string) => vo
 
   return (
     <div className={`flex ${isUser ? 'justify-end' : 'justify-start'}`}>
-      <div className={`flex items-start gap-3 max-w-[85%] ${isUser ? 'flex-row-reverse' : ''}`}>
+      <div className={`flex items-start gap-3 max-w-[92%] sm:max-w-[85%] ${isUser ? 'flex-row-reverse' : ''}`}>
         <div className={`w-8 h-8 rounded-xl flex items-center justify-center shrink-0 ${
           isUser ? 'bg-emerald-500/20 border border-emerald-500/30 text-emerald-400' : 'bg-white/5 border border-white/10 text-stone-400'
         }`}>
@@ -91,9 +92,11 @@ function App() {
     error,           // <-- Added error state
   } = useChatStore();
 
+  const { isMobile, isTablet, isDesktop, isUltraWide } = useWindowSize();
   const [input, setInput] = useState('');
   const [deepThink, setDeepThink] = useState(false);
   const [isHistoryOpen, setIsHistoryOpen] = useState(true);
+  const [showMobilePanel, setShowMobilePanel] = useState(false);
   const [expandedTrace, setExpandedTrace] = useState<string | null>(null);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const messagesContainerRef = useRef<HTMLDivElement>(null);
@@ -110,6 +113,10 @@ function App() {
   useEffect(() => {
     if (!isLoading && messages.length === 0) inputRef.current?.focus();
   }, [isLoading, messages.length]);
+
+  useEffect(() => {
+    if (!isMobile) setShowMobilePanel(false);
+  }, [isMobile]);
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -131,9 +138,11 @@ function App() {
   };
 
   const hasMessages = messages.length > 0;
+  const showRightPanel = isTablet || isDesktop;
 
   return (
-    <div className="h-screen w-screen flex flex-col overflow-hidden bg-[#0c0c0f]">
+    <div className="h-screen w-screen overflow-hidden bg-[#0c0c0f]">
+      <div className={`max-w-7xl mx-auto w-full h-full flex flex-col ${isUltraWide ? 'px-2' : ''}`}>
       {/* ---- Aurora Background ---- */}
       <div className="aurora-bg">
         <div className="aurora-blob blob-1" />
@@ -144,7 +153,7 @@ function App() {
       <div className="glass-orb orb-2" />
 
       {/* ---- HEADER ---- */}
-      <header className="h-14 flex items-center justify-between px-4 shrink-0 z-20 border-b border-white/5 bg-black/40 backdrop-blur-xl">
+      <header className="min-h-14 flex flex-wrap items-center justify-between gap-2 px-4 py-2 shrink-0 z-20 border-b border-white/5 bg-black/40 backdrop-blur-xl">
         <div className="flex items-center gap-3">
           <button
             onClick={() => setIsHistoryOpen(!isHistoryOpen)}
@@ -170,7 +179,7 @@ function App() {
           </span>
         </div>
 
-        <div className="flex items-center gap-4">
+        <div className="flex items-center gap-2 sm:gap-4 flex-wrap justify-end">
           {/* Fast / Deep Toggle - Updated with Groq models */}
           <label className="relative inline-flex items-center cursor-pointer group">
             <input
@@ -201,13 +210,21 @@ function App() {
         </div>
       </header>
 
-      {/* ---- MAIN GRID ---- */}
-      <div className="flex-1 grid grid-cols-1 lg:grid-cols-[auto_1fr_auto] min-h-0 overflow-hidden">
+      {/* ---- MAIN LAYOUT ---- */}
+      <div className="flex-1 flex min-h-0 overflow-hidden">
+        {isMobile && isHistoryOpen && (
+          <button
+            onClick={() => setIsHistoryOpen(false)}
+            className="fixed inset-0 z-40 bg-black/60 backdrop-blur-sm"
+            aria-label="Close history"
+          />
+        )}
         
         {/* LEFT SIDEBAR */}
         <aside className={`
-          ${isHistoryOpen ? 'w-64' : 'w-0'}
-          transition-all duration-300 ease-in-out overflow-hidden border-r border-white/5 bg-black/20 backdrop-blur-sm
+          ${isHistoryOpen && !isMobile ? 'w-64' : isHistoryOpen && isMobile ? 'w-[80vw] max-w-[320px]' : 'w-0'}
+          ${isMobile ? 'fixed inset-y-0 left-0 z-50 bg-black/90 backdrop-blur-xl' : 'border-r border-white/5 bg-black/20 backdrop-blur-sm'}
+          transition-all duration-300 ease-in-out overflow-hidden
         `}>
           {isHistoryOpen && <ChatHistory onNewChat={handleNewChat} />}
         </aside>
@@ -331,7 +348,8 @@ function App() {
         </main>
 
         {/* RIGHT PANEL: TELEMETRY */}
-        <aside className="w-72 lg:w-80 xl:w-96 shrink-0 flex flex-col gap-2 p-2 overflow-hidden bg-black/20 backdrop-blur-sm border-l border-white/5 min-h-0">
+        {showRightPanel && (
+          <aside className="hidden md:flex w-72 lg:w-80 xl:w-96 shrink-0 flex-col gap-2 p-2 overflow-hidden bg-black/20 backdrop-blur-sm border-l border-white/5 min-h-0">
           {/* Agent Telemetry Grid */}
           <LiquidGlassCard className="p-3 bg-white/5 border-white/10 flex-shrink-0">
             <div className="grid grid-cols-3 gap-2">
@@ -382,7 +400,62 @@ function App() {
               <span>Tasks: <span className="text-white">{metrics.tasks ?? 0}</span></span>
             </div>
           </LiquidGlassCard>
-        </aside>
+          </aside>
+        )}
+      </div>
+
+      {isMobile && (
+        <>
+          <button
+            onClick={() => setShowMobilePanel(!showMobilePanel)}
+            className="fixed bottom-20 right-4 z-50 p-3 rounded-full bg-emerald-500/20 border border-emerald-500/30 text-emerald-400 shadow-lg"
+          >
+            {showMobilePanel ? <X className="w-6 h-6" /> : <Activity className="w-6 h-6" />}
+          </button>
+          {showMobilePanel && (
+            <div className="fixed inset-x-0 bottom-0 z-40 max-h-[60vh] bg-black/90 backdrop-blur-xl border-t border-white/5 rounded-t-2xl p-4 overflow-y-auto">
+              <div className="flex items-center justify-between mb-2">
+                <span className="text-xs font-mono text-stone-400">TELEMETRY & LOGS</span>
+                <button onClick={() => setShowMobilePanel(false)} className="text-stone-400">
+                  <X className="w-5 h-5" />
+                </button>
+              </div>
+              <div className="grid grid-cols-2 gap-2">
+                {['Planner','Researcher','Coder','Critic','Writer'].slice(0, 4).map((agent) => {
+                  const isActive = activeAgent === agent && isLoading;
+                  return (
+                    <div
+                      key={agent}
+                      className={`p-2 rounded-lg text-center transition-all ${
+                        isActive ? 'bg-emerald-500/20 border border-emerald-500/40' : 'bg-white/5 border border-white/5'
+                      }`}
+                    >
+                      <div className={`text-[10px] font-mono font-bold ${isActive ? 'text-emerald-400' : 'text-stone-500'}`}>
+                        {agent.toUpperCase()}
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+              <div className="mt-4 h-28 overflow-y-auto font-mono text-[10px] space-y-1 bg-black/40 rounded-lg p-2 border border-white/5">
+                {systemLogs.slice(-8).map((log, idx) => {
+                  const isError = log.toLowerCase().includes('error');
+                  return (
+                    <div key={idx} className={`${isError ? 'text-rose-400' : 'text-stone-400'} leading-relaxed`}>
+                      {log}
+                    </div>
+                  );
+                })}
+              </div>
+              <div className="mt-3 flex justify-between text-[10px] font-mono text-stone-500">
+                <span>Tokens: <span className="text-white">{metrics.tokens ?? 0}</span></span>
+                <span>Latency: <span className="text-white">{metrics.latency ?? 0}ms</span></span>
+                <span>Tasks: <span className="text-white">{metrics.tasks ?? 0}</span></span>
+              </div>
+            </div>
+          )}
+        </>
+      )}
       </div>
     </div>
   );
