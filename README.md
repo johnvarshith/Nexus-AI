@@ -1,4 +1,3 @@
-```markdown
 # 🚨 NexusAI Ops: Autonomous SRE Incident Responder
 ### *Not a general-purpose chatbot. A vertical, self-correcting AI agent built exclusively for SRE (Site Reliability Engineering) incidents.*
 
@@ -289,5 +288,6 @@ Distributed under the MIT License. See `LICENSE` file for more information.
 ```
 
 ---
+
 
 
